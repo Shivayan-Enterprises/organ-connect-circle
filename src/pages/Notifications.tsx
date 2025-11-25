@@ -67,7 +67,7 @@ export default function Notifications() {
         .from("contact_requests")
         .select(`
           *,
-          sender_profile:profiles!contact_requests_sender_id_fkey(*)
+          sender_profile:profiles!sender_id(*)
         `)
         .eq("recipient_id", user.id)
         .order("created_at", { ascending: false });
@@ -80,7 +80,7 @@ export default function Notifications() {
         .from("contact_requests")
         .select(`
           *,
-          recipient_profile:profiles!contact_requests_recipient_id_fkey(*)
+          recipient_profile:profiles!recipient_id(*)
         `)
         .eq("sender_id", user.id)
         .order("created_at", { ascending: false });
