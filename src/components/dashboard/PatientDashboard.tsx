@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Users, Heart } from "lucide-react";
 import AddRequirementDialog from "./AddRequirementDialog";
-import DonorsList from "./DonorsList";
 
 interface PatientDashboardProps {
   profile: any;
 }
 
 const PatientDashboard = ({ profile }: PatientDashboardProps) => {
+  const navigate = useNavigate();
   const [requirements, setRequirements] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showDonors, setShowDonors] = useState(false);
 
   const fetchRequirements = async () => {
     const { data } = await supabase
@@ -47,7 +47,7 @@ const PatientDashboard = ({ profile }: PatientDashboardProps) => {
           <p className="text-muted-foreground">Patient Dashboard</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setShowDonors(true)} variant="outline">
+          <Button onClick={() => navigate("/donors")} variant="outline">
             <Users className="w-4 h-4 mr-2" />
             View Donors
           </Button>
@@ -111,8 +111,6 @@ const PatientDashboard = ({ profile }: PatientDashboardProps) => {
         patientId={profile.id}
         onSuccess={fetchRequirements}
       />
-
-      <DonorsList open={showDonors} onOpenChange={setShowDonors} />
     </div>
   );
 };

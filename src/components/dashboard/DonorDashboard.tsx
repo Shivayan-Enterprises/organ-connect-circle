@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ interface DonorDashboardProps {
 }
 
 const DonorDashboard = ({ profile }: DonorDashboardProps) => {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [requirements, setRequirements] = useState<any[]>([]);
@@ -71,10 +73,15 @@ const DonorDashboard = ({ profile }: DonorDashboardProps) => {
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold flex items-center gap-2">
-          <Heart className="w-5 h-5 text-primary" />
-          Active Organ Requirements
-        </h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold flex items-center gap-2">
+            <Heart className="w-5 h-5 text-primary" />
+            Active Organ Requirements
+          </h3>
+          <Button onClick={() => navigate("/patients")} variant="outline">
+            View All Patients
+          </Button>
+        </div>
 
         {requirements.length === 0 ? (
           <Card>
@@ -85,7 +92,11 @@ const DonorDashboard = ({ profile }: DonorDashboardProps) => {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {requirements.map((req) => (
-              <Card key={req.id} className="hover:shadow-md transition-shadow">
+              <Card 
+                key={req.id} 
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate(`/patient/${req.patient_id}`)}
+              >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>

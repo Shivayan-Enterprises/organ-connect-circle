@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          recipient_id: string
+          sender_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          recipient_id: string
+          sender_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          recipient_id?: string
+          sender_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       organ_requirements: {
         Row: {
           blood_type_required: Database["public"]["Enums"]["blood_type"]
