@@ -62,31 +62,58 @@ export default function Notifications() {
 
       if (!user) return;
 
-      // Fetch received requests
-      const { data: received, error: receivedError } = await supabase
+      // Fetch received requests (where current user is recipient)
+      const { data: receivedRaw, error: receivedError } = await supabase
         .from("contact_requests")
-        .select(`
-          *,
-          sender_profile:profiles!sender_id(*)
-        `)
+        .select("*")
         .eq("recipient_id", user.id)
         .order("created_at", { ascending: false });
 
       if (receivedError) throw receivedError;
-      setReceivedRequests(received || []);
 
-      // Fetch sent requests
-      const { data: sent, error: sentError } = await supabase
+      // Fetch sent requests (where current user is sender)
+      const { data: sentRaw, error: sentError } = await supabase
         .from("contact_requests")
-        .select(`
-          *,
-          recipient_profile:profiles!recipient_id(*)
-        `)
+        .select("*")
         .eq("sender_id", user.id)
         .order("created_at", { ascending: false });
 
       if (sentError) throw sentError;
-      setSentRequests(sent || []);
+
+      const received = receivedRaw || [];
+      const sent = sentRaw || [];
+
+      // Collect unique sender and recipient IDs
+      const senderIds = Array.from(new Set(received.map(r => r.sender_id)));
+      const recipientIds = Array.from(new Set(sent.map(r => r.recipient_id)));
+      const allProfileIds = Array.from(new Set([...senderIds, ...recipientIds]));
+
+      let profilesById: Record<string, any> = {};
+      if (allProfileIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("id", allProfileIds);
+
+        if (profilesError) throw profilesError;
+        profilesById = (profiles || []).reduce((acc: Record<string, any>, profile: any) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {} as Record<string, any>);
+      }
+
+      const receivedWithProfiles = received.map((r) => ({
+        ...r,
+        sender_profile: profilesById[r.sender_id] || null,
+      }));
+
+      const sentWithProfiles = sent.map((r) => ({
+        ...r,
+        recipient_profile: profilesById[r.recipient_id] || null,
+      }));
+
+      setReceivedRequests(receivedWithProfiles as ContactRequest[]);
+      setSentRequests(sentWithProfiles as ContactRequest[]);
     } catch (error: any) {
       toast({
         title: "Error",
