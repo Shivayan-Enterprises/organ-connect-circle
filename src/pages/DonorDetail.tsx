@@ -20,8 +20,7 @@ export default function DonorDetail() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
-  const [videoRoomUrl, setVideoRoomUrl] = useState<string | null>(null);
-  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [videoRoomName, setVideoRoomName] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -143,38 +142,18 @@ export default function DonorDetail() {
     }
   };
 
-  const startVideoCall = async () => {
-    setIsCreatingRoom(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-video-room', {
-        body: {
-          participants: [
-            { userId: currentUser?.id, name: 'You', is_owner: true },
-            { userId: donor.id, name: donor.full_name, is_owner: false },
-          ],
-        },
-      });
-
-      if (error) throw error;
-
-      setVideoRoomUrl(data.room_url);
-      toast({
-        title: "Success",
-        description: "Video call room created",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to create video room",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingRoom(false);
-    }
+  const startVideoCall = () => {
+    // Generate unique room name using user IDs
+    const roomName = `organ-donation-${currentUser?.id}-${donor.id}-${Date.now()}`;
+    setVideoRoomName(roomName);
+    toast({
+      title: "Success",
+      description: "Video call started",
+    });
   };
 
   const endVideoCall = () => {
-    setVideoRoomUrl(null);
+    setVideoRoomName(null);
   };
 
   if (loading) {
@@ -283,17 +262,16 @@ export default function DonorDetail() {
 
         {currentUser?.id !== id && donor.approved_by_doctor && (
           <>
-            {!videoRoomUrl ? (
+            {!videoRoomName ? (
               <>
                 <div className="flex gap-2 mb-6">
                   <Button
                     onClick={startVideoCall}
-                    disabled={isCreatingRoom}
                     variant="outline"
                     className="flex-1"
                   >
                     <Video className="w-4 h-4 mr-2" />
-                    {isCreatingRoom ? "Creating room..." : "Start Video Call"}
+                    Start Video Call
                   </Button>
                   <Button
                     onClick={() => setShowChat(!showChat)}
@@ -317,7 +295,11 @@ export default function DonorDetail() {
               </>
             ) : (
               <div className="mb-6">
-                <VideoCall roomUrl={videoRoomUrl} onLeave={endVideoCall} />
+                <VideoCall 
+                  roomName={videoRoomName}
+                  userName={currentProfile?.full_name || "User"}
+                  onLeave={endVideoCall} 
+                />
               </div>
             )}
 
