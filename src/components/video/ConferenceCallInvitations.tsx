@@ -39,6 +39,8 @@ export default function ConferenceCallInvitations({ currentUserId, currentUserNa
 
   const fetchInvitations = async () => {
     try {
+      console.log("Fetching invitations for user:", currentUserId);
+      
       const { data, error } = await supabase
         .from("video_call_participants")
         .select(`
@@ -60,6 +62,8 @@ export default function ConferenceCallInvitations({ currentUserId, currentUserNa
         .eq("call_request.status", "pending");
 
       if (error) throw error;
+      
+      console.log("Fetched invitations:", data);
       setInvitations(data as any || []);
     } catch (error: any) {
       console.error("Error fetching invitations:", error);
@@ -77,11 +81,26 @@ export default function ConferenceCallInvitations({ currentUserId, currentUserNa
           table: "video_call_participants",
           filter: `user_id=eq.${currentUserId}`,
         },
-        () => {
+        (payload) => {
+          console.log("Participant change:", payload);
           fetchInvitations();
         }
       )
-      .subscribe();
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "video_call_requests",
+        },
+        (payload) => {
+          console.log("Call request change:", payload);
+          fetchInvitations();
+        }
+      )
+      .subscribe((status) => {
+        console.log("Subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

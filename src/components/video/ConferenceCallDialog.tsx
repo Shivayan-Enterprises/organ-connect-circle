@@ -112,6 +112,8 @@ export default function ConferenceCallDialog({ currentUserId, currentUserName }:
 
       if (participantsError) throw participantsError;
 
+      console.log("Invitations sent to:", participantInserts);
+
       toast({
         title: "Success",
         description: "Conference call invitation sent to all participants",
