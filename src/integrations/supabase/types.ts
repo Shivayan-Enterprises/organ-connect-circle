@@ -231,6 +231,89 @@ export type Database = {
           },
         ]
       }
+      video_call_participants: {
+        Row: {
+          call_request_id: string
+          created_at: string | null
+          id: string
+          responded_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          call_request_id: string
+          created_at?: string | null
+          id?: string
+          responded_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          call_request_id?: string
+          created_at?: string | null
+          id?: string
+          responded_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_call_participants_call_request_id_fkey"
+            columns: ["call_request_id"]
+            isOneToOne: false
+            referencedRelation: "video_call_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_call_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_call_requests: {
+        Row: {
+          created_at: string | null
+          ended_at: string | null
+          id: string
+          initiator_id: string
+          room_name: string
+          started_at: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          initiator_id: string
+          room_name: string
+          started_at?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          initiator_id?: string
+          room_name?: string
+          started_at?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_call_requests_initiator_id_fkey"
+            columns: ["initiator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

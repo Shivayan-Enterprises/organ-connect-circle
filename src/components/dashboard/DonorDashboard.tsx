@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Heart, User, Phone, Mail, MapPin, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationBadge from "@/components/NotificationBadge";
+import ConferenceCallDialog from "@/components/video/ConferenceCallDialog";
+import ConferenceCallInvitations from "@/components/video/ConferenceCallInvitations";
 
 interface DonorDashboardProps {
   profile: any;
@@ -93,12 +95,23 @@ const DonorDashboard = ({ profile }: DonorDashboardProps) => {
           <h2 className="text-3xl font-bold">Welcome, {profile.full_name}</h2>
           <p className="text-muted-foreground">Donor Dashboard</p>
         </div>
-        <Button onClick={() => navigate("/notifications")} variant="outline">
-          <Bell className="mr-2 h-4 w-4" />
-          Notifications
-          <NotificationBadge />
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate("/notifications")} variant="outline">
+            <Bell className="mr-2 h-4 w-4" />
+            Notifications
+            <NotificationBadge />
+          </Button>
+          <ConferenceCallDialog 
+            currentUserId={profile.id}
+            currentUserName={profile.full_name}
+          />
+        </div>
       </div>
+
+      <ConferenceCallInvitations 
+        currentUserId={profile.id}
+        currentUserName={profile.full_name}
+      />
 
       <div className="relative">
         <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />

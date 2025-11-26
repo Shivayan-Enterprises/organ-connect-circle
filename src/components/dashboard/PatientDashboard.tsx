@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Users, Heart, Bell } from "lucide-react";
 import AddRequirementDialog from "./AddRequirementDialog";
 import NotificationBadge from "@/components/NotificationBadge";
+import ConferenceCallDialog from "@/components/video/ConferenceCallDialog";
+import ConferenceCallInvitations from "@/components/video/ConferenceCallInvitations";
 
 interface PatientDashboardProps {
   profile: any;
@@ -47,12 +49,16 @@ const PatientDashboard = ({ profile }: PatientDashboardProps) => {
           <h2 className="text-3xl font-bold">Welcome, {profile.full_name}</h2>
           <p className="text-muted-foreground">Patient Dashboard</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button onClick={() => navigate("/notifications")} variant="outline">
             <Bell className="w-4 h-4 mr-2" />
             Notifications
             <NotificationBadge />
           </Button>
+          <ConferenceCallDialog 
+            currentUserId={profile.id}
+            currentUserName={profile.full_name}
+          />
           <Button onClick={() => navigate("/donors")} variant="outline">
             <Users className="w-4 h-4 mr-2" />
             View Donors
@@ -63,6 +69,11 @@ const PatientDashboard = ({ profile }: PatientDashboardProps) => {
           </Button>
         </div>
       </div>
+
+      <ConferenceCallInvitations 
+        currentUserId={profile.id}
+        currentUserName={profile.full_name}
+      />
 
       <div className="grid gap-4">
         <h3 className="text-xl font-semibold flex items-center gap-2">
