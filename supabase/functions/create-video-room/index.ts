@@ -30,7 +30,6 @@ serve(async (req) => {
           max_participants: participants?.length || 2,
           enable_chat: true,
           enable_screenshare: false,
-          enable_recording: 'off',
           exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
         }
       }),
