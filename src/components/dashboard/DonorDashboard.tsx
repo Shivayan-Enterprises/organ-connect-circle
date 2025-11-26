@@ -33,13 +33,43 @@ const DonorDashboard = ({ profile }: DonorDashboardProps) => {
   };
 
   const fetchRequirements = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("organ_requirements")
-      .select("*, profiles(*)")
+      .select("*")
       .eq("status", "active")
       .order("urgency", { ascending: true });
 
-    if (data) setRequirements(data);
+    if (error) {
+      console.error("Error fetching organ requirements", error);
+      return;
+    }
+
+    const requirementsData = data || [];
+    const patientIds = Array.from(new Set(requirementsData.map((req: any) => req.patient_id)));
+
+    let profilesById: Record<string, any> = {};
+    if (patientIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", patientIds);
+
+      if (profilesError) {
+        console.error("Error fetching patient profiles", profilesError);
+      } else {
+        profilesById = (profiles || []).reduce((acc: Record<string, any>, profile: any) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {} as Record<string, any>);
+      }
+    }
+
+    const requirementsWithProfiles = requirementsData.map((req: any) => ({
+      ...req,
+      patient_profile: profilesById[req.patient_id] || null,
+    }));
+
+    setRequirements(requirementsWithProfiles);
   };
 
   const filteredPatients = patients.filter((patient) =>
@@ -111,7 +141,7 @@ const DonorDashboard = ({ profile }: DonorDashboardProps) => {
                       <CardTitle className="capitalize">{req.organ_type}</CardTitle>
                       <CardDescription className="flex items-center gap-1 mt-1">
                         <User className="w-3 h-3" />
-                        {req.profiles?.full_name}
+                        {req.patient_profile?.full_name}
                       </CardDescription>
                     </div>
                     <Badge variant={getUrgencyColor(req.urgency)}>
@@ -130,24 +160,24 @@ const DonorDashboard = ({ profile }: DonorDashboardProps) => {
                       <p className="text-sm text-muted-foreground">{req.description}</p>
                     </div>
                   )}
-                  {req.profiles && (
+                  {req.patient_profile && (
                     <div className="pt-3 border-t space-y-2">
-                      {req.profiles.phone && (
+                      {req.patient_profile.phone && (
                         <div className="flex items-center gap-2 text-sm">
                           <Phone className="w-4 h-4 text-muted-foreground" />
-                          <span>{req.profiles.phone}</span>
+                          <span>{req.patient_profile.phone}</span>
                         </div>
                       )}
-                      {req.profiles.email && (
+                      {req.patient_profile.email && (
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="w-4 h-4 text-muted-foreground" />
-                          <span>{req.profiles.email}</span>
+                          <span>{req.patient_profile.email}</span>
                         </div>
                       )}
-                      {req.profiles.location && (
+                      {req.patient_profile.location && (
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="w-4 h-4 text-muted-foreground" />
-                          <span>{req.profiles.location}</span>
+                          <span>{req.patient_profile.location}</span>
                         </div>
                       )}
                     </div>
