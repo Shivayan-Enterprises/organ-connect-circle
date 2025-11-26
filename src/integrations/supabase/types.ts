@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          participant_one: string
+          participant_two: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          participant_one: string
+          participant_two: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          participant_one?: string
+          participant_two?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_conversations_participant_one_fkey"
+            columns: ["participant_one"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversations_participant_two_fkey"
+            columns: ["participant_two"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          conversation_id: string
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_requests: {
         Row: {
           created_at: string
@@ -94,6 +175,9 @@ export type Database = {
       profiles: {
         Row: {
           age: number | null
+          approved_at: string | null
+          approved_by: string | null
+          approved_by_doctor: boolean | null
           blood_type: Database["public"]["Enums"]["blood_type"] | null
           created_at: string | null
           email: string
@@ -107,6 +191,9 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_by_doctor?: boolean | null
           blood_type?: Database["public"]["Enums"]["blood_type"] | null
           created_at?: string | null
           email: string
@@ -120,6 +207,9 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_by_doctor?: boolean | null
           blood_type?: Database["public"]["Enums"]["blood_type"] | null
           created_at?: string | null
           email?: string
@@ -131,7 +221,15 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
