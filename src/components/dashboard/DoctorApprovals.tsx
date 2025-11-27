@@ -19,8 +19,21 @@ interface PendingDonor {
   created_at: string;
 }
 
+interface MatchingPatient {
+  id: string;
+  full_name: string;
+  blood_type: string | null;
+  age: number | null;
+  organ_requirements: {
+    organ_type: string;
+    urgency: string;
+    blood_type_required: string;
+  }[];
+}
+
 const DoctorApprovals = () => {
   const [pendingDonors, setPendingDonors] = useState<PendingDonor[]>([]);
+  const [matchingPatients, setMatchingPatients] = useState<Record<string, MatchingPatient[]>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,6 +53,11 @@ const DoctorApprovals = () => {
 
       if (error) throw error;
       setPendingDonors(data || []);
+
+      // Fetch matching patients for each donor
+      if (data && data.length > 0) {
+        await fetchMatchingPatients(data);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -48,6 +66,54 @@ const DoctorApprovals = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMatchingPatients = async (donors: PendingDonor[]) => {
+    try {
+      const patientsMap: Record<string, MatchingPatient[]> = {};
+
+      for (const donor of donors) {
+        // Fetch patients with active organ requirements
+        const { data: patients, error } = await supabase
+          .from("profiles")
+          .select(`
+            id,
+            full_name,
+            blood_type,
+            age
+          `)
+          .eq("role", "patient");
+
+        if (error) throw error;
+
+        if (patients) {
+          // For each patient, fetch their organ requirements
+          const patientsWithRequirements = await Promise.all(
+            patients.map(async (patient) => {
+              const { data: requirements } = await supabase
+                .from("organ_requirements")
+                .select("organ_type, urgency, blood_type_required")
+                .eq("patient_id", patient.id)
+                .eq("status", "active");
+
+              return {
+                ...patient,
+                organ_requirements: requirements || [],
+              };
+            })
+          );
+
+          // Filter to only show patients with active requirements
+          patientsMap[donor.id] = patientsWithRequirements.filter(
+            (p) => p.organ_requirements.length > 0
+          );
+        }
+      }
+
+      setMatchingPatients(patientsMap);
+    } catch (error: any) {
+      console.error("Error fetching matching patients:", error);
     }
   };
 
@@ -194,6 +260,32 @@ const DoctorApprovals = () => {
                     <p className="text-sm text-muted-foreground line-clamp-3">
                       {donor.medical_history}
                     </p>
+                  </div>
+                )}
+
+                {matchingPatients[donor.id] && matchingPatients[donor.id].length > 0 && (
+                  <div className="pt-3 border-t">
+                    <p className="text-sm font-medium mb-2">Matching Patients ({matchingPatients[donor.id].length})</p>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {matchingPatients[donor.id].slice(0, 3).map((patient) => (
+                        <div key={patient.id} className="text-xs bg-muted/50 p-2 rounded">
+                          <p className="font-medium">{patient.full_name}</p>
+                          {patient.blood_type && (
+                            <p className="text-muted-foreground">Blood: {patient.blood_type}</p>
+                          )}
+                          {patient.organ_requirements.map((req, idx) => (
+                            <p key={idx} className="text-muted-foreground">
+                              Needs: {req.organ_type} ({req.urgency})
+                            </p>
+                          ))}
+                        </div>
+                      ))}
+                      {matchingPatients[donor.id].length > 3 && (
+                        <p className="text-xs text-muted-foreground">
+                          +{matchingPatients[donor.id].length - 3} more patients
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
