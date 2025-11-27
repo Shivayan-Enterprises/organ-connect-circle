@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, Heart, Activity, Bell } from "lucide-react";
+import { Users, Heart, Activity, Bell, User, MessageCircle } from "lucide-react";
 import NotificationBadge from "@/components/NotificationBadge";
 import DoctorApprovals from "./DoctorApprovals";
 
@@ -50,7 +50,15 @@ const DoctorDashboard = ({ profile }: DoctorDashboardProps) => {
           <h2 className="text-3xl font-bold">Welcome, Dr. {profile.full_name}</h2>
           <p className="text-muted-foreground">Medical Professional Dashboard</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => navigate("/profile")} variant="outline">
+            <User className="mr-2 h-4 w-4" />
+            Profile
+          </Button>
+          <Button onClick={() => navigate("/messages")} variant="outline">
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Messages
+          </Button>
           <Button onClick={() => navigate("/notifications")} variant="outline">
             <Bell className="mr-2 h-4 w-4" />
             Notifications
@@ -58,7 +66,7 @@ const DoctorDashboard = ({ profile }: DoctorDashboardProps) => {
           </Button>
           <Button onClick={() => navigate("/conference-calls")} variant="outline">
             <Users className="mr-2 h-4 w-4" />
-            Conference Calls
+            Calls
           </Button>
         </div>
       </div>

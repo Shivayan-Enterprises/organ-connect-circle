@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mail, Phone, MapPin, Heart, Calendar, MessageCircle, Video } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MapPin, Heart, Calendar, MessageCircle, Video, FileText } from "lucide-react";
 import ChatInterface from "@/components/chat/ChatInterface";
 import VideoCall from "@/components/video/VideoCall";
 
@@ -22,6 +22,7 @@ export default function PatientDetail() {
   const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
   const [videoRoomName, setVideoRoomName] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<string[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -49,6 +50,14 @@ export default function PatientDetail() {
 
       if (patientError) throw patientError;
       setPatient(patientData);
+
+      // Fetch documents (visible to doctors and the patient themselves)
+      if (currentProfile?.role === "doctor" || user?.id === patientData.id) {
+        const { data: files } = await supabase.storage
+          .from("medical-documents")
+          .list(patientData.id);
+        setDocuments(files?.map(f => f.name) || []);
+      }
 
       const { data: reqData, error: reqError } = await supabase
         .from("organ_requirements")
@@ -180,6 +189,28 @@ export default function PatientDetail() {
               <div>
                 <h3 className="font-semibold mb-2">Medical History</h3>
                 <p className="text-muted-foreground">{patient.medical_history}</p>
+              </div>
+            )}
+            {documents.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Medical Documents
+                </h3>
+                <div className="space-y-2">
+                  {documents.map((doc, idx) => (
+                    <a
+                      key={idx}
+                      href={supabase.storage.from("medical-documents").getPublicUrl(`${patient.id}/${doc}`).data.publicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-primary hover:underline"
+                    >
+                      <FileText className="w-4 h-4" />
+                      {doc}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>

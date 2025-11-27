@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, Heart, Bell } from "lucide-react";
+import { Plus, Users, Heart, Bell, User, MessageCircle } from "lucide-react";
 import AddRequirementDialog from "./AddRequirementDialog";
 import NotificationBadge from "@/components/NotificationBadge";
 
@@ -48,6 +48,14 @@ const PatientDashboard = ({ profile }: PatientDashboardProps) => {
           <p className="text-muted-foreground">Patient Dashboard</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button onClick={() => navigate("/profile")} variant="outline">
+            <User className="w-4 h-4 mr-2" />
+            Profile
+          </Button>
+          <Button onClick={() => navigate("/messages")} variant="outline">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Messages
+          </Button>
           <Button onClick={() => navigate("/notifications")} variant="outline">
             <Bell className="w-4 h-4 mr-2" />
             Notifications
@@ -55,11 +63,11 @@ const PatientDashboard = ({ profile }: PatientDashboardProps) => {
           </Button>
           <Button onClick={() => navigate("/conference-calls")} variant="outline">
             <Users className="w-4 h-4 mr-2" />
-            Conference Calls
+            Calls
           </Button>
           <Button onClick={() => navigate("/donors")} variant="outline">
             <Users className="w-4 h-4 mr-2" />
-            View Donors
+            Donors
           </Button>
           <Button onClick={() => setShowAddDialog(true)}>
             <Plus className="w-4 h-4 mr-2" />
