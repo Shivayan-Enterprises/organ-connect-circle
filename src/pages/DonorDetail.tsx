@@ -2,13 +2,19 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mail, Phone, MapPin, Heart, Calendar, MessageCircle, CheckCircle, XCircle, Video, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import ChatInterface from "@/components/chat/ChatInterface";
 import VideoCall from "@/components/video/VideoCall";
+import { 
+  ArrowLeft, Mail, Phone, MapPin, Heart, Calendar, 
+  MessageCircle, CheckCircle, XCircle, Video, FileText,
+  Send, Droplets, User
+} from "lucide-react";
 
 export default function DonorDetail() {
   const { id } = useParams();
@@ -50,7 +56,6 @@ export default function DonorDetail() {
       if (donorError) throw donorError;
       setDonor(donorData);
 
-      // Fetch documents (visible to doctors and the donor themselves)
       const profile = await supabase
         .from("profiles")
         .select("role")
@@ -158,7 +163,6 @@ export default function DonorDetail() {
   };
 
   const startVideoCall = () => {
-    // Generate unique room name using user IDs
     const roomName = `organ-donation-${currentUser?.id}-${donor.id}-${Date.now()}`;
     setVideoRoomName(roomName);
     toast({
@@ -173,194 +177,228 @@ export default function DonorDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center py-20">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
 
   if (!donor) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Donor not found</p>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center py-20">
+          <p className="text-muted-foreground">Donor not found</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+
+      <div className="container mx-auto px-4 py-8">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-3xl">{donor.full_name}</CardTitle>
-                <CardDescription>Donor Profile</CardDescription>
-              </div>
-              {!donor.approved_by_doctor && (
-                <Badge variant="secondary">Pending Approval</Badge>
-              )}
-              {donor.approved_by_doctor && (
-                <Badge variant="default">Approved</Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{donor.email}</span>
-              </div>
-              {donor.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{donor.phone}</span>
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Main Profile */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-6 mb-6">
+                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-10 w-10 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h1 className="text-2xl font-bold">{donor.full_name}</h1>
+                        <p className="text-muted-foreground">Organ Donor</p>
+                      </div>
+                      <Badge variant={donor.approved_by_doctor ? "default" : "secondary"}>
+                        {donor.approved_by_doctor ? "Verified" : "Pending Verification"}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
-              )}
-              {donor.location && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{donor.location}</span>
-                </div>
-              )}
-              {donor.blood_type && (
-                <div className="flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-muted-foreground" />
-                  <span>Blood Type: {donor.blood_type}</span>
-                </div>
-              )}
-              {donor.age && (
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>Age: {donor.age}</span>
-                </div>
-              )}
-            </div>
-            {donor.medical_history && (
-              <div>
-                <h3 className="font-semibold mb-2">Medical History</h3>
-                <p className="text-muted-foreground">{donor.medical_history}</p>
-              </div>
-            )}
 
-            {documents.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  Medical Documents
-                </h3>
-                <div className="space-y-2">
-                  {documents.map((doc, idx) => (
-                    <a
-                      key={idx}
-                      href={supabase.storage.from("medical-documents").getPublicUrl(`${donor.id}/${doc}`).data.publicUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-primary hover:underline"
-                    >
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Mail className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="text-sm font-medium">{donor.email}</p>
+                    </div>
+                  </div>
+                  {donor.phone && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <Phone className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Phone</p>
+                        <p className="text-sm font-medium">{donor.phone}</p>
+                      </div>
+                    </div>
+                  )}
+                  {donor.location && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <MapPin className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Location</p>
+                        <p className="text-sm font-medium">{donor.location}</p>
+                      </div>
+                    </div>
+                  )}
+                  {donor.blood_type && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <Droplets className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Blood Type</p>
+                        <p className="text-sm font-medium">{donor.blood_type}</p>
+                      </div>
+                    </div>
+                  )}
+                  {donor.age && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Age</p>
+                        <p className="text-sm font-medium">{donor.age} years</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {donor.medical_history && (
+                  <div className="mt-6">
+                    <h3 className="font-semibold mb-2">Medical History</h3>
+                    <p className="text-sm text-muted-foreground">{donor.medical_history}</p>
+                  </div>
+                )}
+
+                {documents.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
                       <FileText className="w-4 h-4" />
-                      {doc}
-                    </a>
-                  ))}
-                </div>
-              </div>
+                      Medical Documents
+                    </h3>
+                    <div className="space-y-2">
+                      {documents.map((doc, idx) => (
+                        <a
+                          key={idx}
+                          href={supabase.storage.from("medical-documents").getPublicUrl(`${donor.id}/${doc}`).data.publicUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-primary hover:underline p-2 rounded-lg bg-primary/5"
+                        >
+                          <FileText className="w-4 h-4" />
+                          {doc}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Chat Section */}
+            {showChat && currentProfile && currentUser?.id !== id && (
+              <ChatInterface
+                recipientId={id!}
+                recipientName={donor.full_name}
+                currentUserId={currentUser.id}
+              />
             )}
-          </CardContent>
-        </Card>
 
-        {currentProfile?.role === "doctor" && !donor.approved_by_doctor && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Doctor Approval</CardTitle>
-              <CardDescription>Review and approve/reject this donor</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Button onClick={handleApprove} className="flex-1">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Approve Donor
-                </Button>
-                <Button
-                  onClick={handleReject}
-                  variant="destructive"
-                  className="flex-1"
-                >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Reject
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            {/* Video Call */}
+            {videoRoomName && (
+              <VideoCall 
+                roomName={videoRoomName}
+                userName={currentProfile?.full_name || "User"}
+                onLeave={endVideoCall} 
+              />
+            )}
+          </div>
 
-        {currentUser?.id !== id && donor.approved_by_doctor && (
-          <>
-            {!videoRoomName ? (
-              <>
-                <div className="flex gap-2 mb-6">
-                  <Button
-                    onClick={startVideoCall}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    <Video className="w-4 h-4 mr-2" />
-                    Start Video Call
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Doctor Approval */}
+            {currentProfile?.role === "doctor" && !donor.approved_by_doctor && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Doctor Approval</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button onClick={handleApprove} className="w-full">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve Donor
                   </Button>
-                  <Button
+                  <Button onClick={handleReject} variant="destructive" className="w-full">
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Actions */}
+            {currentUser?.id !== id && donor.approved_by_doctor && !videoRoomName && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
                     onClick={() => setShowChat(!showChat)}
-                    variant={showChat ? "default" : "outline"}
-                    className="flex-1"
                   >
                     <MessageCircle className="w-4 h-4 mr-2" />
                     {showChat ? "Hide Chat" : "Start Chat"}
                   </Button>
-                </div>
-
-                {showChat && currentProfile && (
-                  <div className="mb-6">
-                    <ChatInterface
-                      recipientId={id!}
-                      recipientName={donor.full_name}
-                      currentUserId={currentUser.id}
-                    />
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="mb-6">
-                <VideoCall 
-                  roomName={videoRoomName}
-                  userName={currentProfile?.full_name || "User"}
-                  onLeave={endVideoCall} 
-                />
-              </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={startVideoCall}
+                  >
+                    <Video className="w-4 h-4 mr-2" />
+                    Video Call
+                  </Button>
+                </CardContent>
+              </Card>
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Send Contact Request</CardTitle>
-                <CardDescription>Send a message to this donor</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="Enter your message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  rows={4}
-                />
-                <Button onClick={handleSendRequest} className="w-full">
-                  Send Request
-                </Button>
-              </CardContent>
-            </Card>
-          </>
-        )}
+            {/* Contact Request */}
+            {currentUser?.id !== id && donor.approved_by_doctor && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Send Request</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Textarea
+                    placeholder="Write your message..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    rows={4}
+                  />
+                  <Button onClick={handleSendRequest} className="w-full">
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Request
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

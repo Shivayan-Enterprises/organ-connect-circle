@@ -51,8 +51,14 @@ export default {
           teal: "hsl(var(--medical-teal))",
           blue: "hsl(var(--medical-blue))",
         },
-        success: "hsl(var(--success))",
-        warning: "hsl(var(--warning))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
