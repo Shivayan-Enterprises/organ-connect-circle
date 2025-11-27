@@ -200,7 +200,7 @@ export default function ConferenceCalls() {
       // Check if all participants accepted
       const { data: participants, error: participantsError } = await supabase
         .from("video_call_participants")
-        .select("status")
+        .select("status, user_id")
         .eq("call_request_id", callRequestId);
 
       if (participantsError) throw participantsError;
@@ -226,12 +226,22 @@ export default function ConferenceCalls() {
 
       if (updateError) throw updateError;
 
-      // Update participant status if provided
+      // Update participant status - use provided participantId or find current user's participation
       if (participantId) {
         await supabase
           .from("video_call_participants")
           .update({ status: "joined" })
           .eq("id", participantId);
+      } else if (currentUser) {
+        // Find and update current user's participation
+        const userParticipant = participants?.find((p) => p.user_id === currentUser.id);
+        if (userParticipant) {
+          await supabase
+            .from("video_call_participants")
+            .update({ status: "joined" })
+            .eq("call_request_id", callRequestId)
+            .eq("user_id", currentUser.id);
+        }
       }
 
       setActiveCall({ roomName, title });
@@ -425,6 +435,7 @@ export default function ConferenceCalls() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-2">
+                      <p className="text-sm font-medium">Participants:</p>
                       {participants.map((participant) => (
                         <div key={participant.id} className="flex justify-between items-center text-sm">
                           <span>{participant.user?.full_name || 'Unknown'}</span>
@@ -433,13 +444,21 @@ export default function ConferenceCalls() {
                       ))}
                     </div>
                     {call.status === "pending" && (
-                      <Button
-                        onClick={() => joinCall(call.id, call.room_name, call.title)}
-                        className="w-full"
-                      >
-                        <Video className="w-4 h-4 mr-2" />
-                        Start Call
-                      </Button>
+                      <>
+                        {participants.some(p => p.status === "invited") && (
+                          <p className="text-sm text-muted-foreground">
+                            Waiting for all participants to accept...
+                          </p>
+                        )}
+                        <Button
+                          onClick={() => joinCall(call.id, call.room_name, call.title)}
+                          className="w-full"
+                          disabled={participants.some(p => p.status === "invited")}
+                        >
+                          <Video className="w-4 h-4 mr-2" />
+                          {participants.every(p => p.status === "accepted") ? "Start Call" : "Waiting for Participants"}
+                        </Button>
+                      </>
                     )}
                     {call.status === "active" && (
                       <Button
