@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Phone, MapPin, Calendar, CheckCircle, XCircle } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, CheckCircle, XCircle, FileText } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface PendingDonor {
@@ -17,6 +17,7 @@ interface PendingDonor {
   blood_type: string | null;
   medical_history: string | null;
   created_at: string;
+  documents?: string[];
 }
 
 interface MatchingPatient {
@@ -52,11 +53,25 @@ const DoctorApprovals = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setPendingDonors(data || []);
+      
+      // Fetch documents for each donor
+      const donorsWithDocs = await Promise.all(
+        (data || []).map(async (donor) => {
+          const { data: files } = await supabase.storage
+            .from("medical-documents")
+            .list(donor.id);
+          return {
+            ...donor,
+            documents: files?.map(f => f.name) || [],
+          };
+        })
+      );
+      
+      setPendingDonors(donorsWithDocs);
 
       // Fetch matching patients for each donor
-      if (data && data.length > 0) {
-        await fetchMatchingPatients(data);
+      if (donorsWithDocs.length > 0) {
+        await fetchMatchingPatients(donorsWithDocs);
       }
     } catch (error: any) {
       toast({
@@ -285,6 +300,29 @@ const DoctorApprovals = () => {
                           +{matchingPatients[donor.id].length - 3} more patients
                         </p>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {donor.documents && donor.documents.length > 0 && (
+                  <div className="pt-3 border-t">
+                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Medical Documents ({donor.documents.length})
+                    </p>
+                    <div className="space-y-1">
+                      {donor.documents.map((doc, idx) => (
+                        <a
+                          key={idx}
+                          href={supabase.storage.from("medical-documents").getPublicUrl(`${donor.id}/${doc}`).data.publicUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-xs text-primary hover:underline truncate"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {doc}
+                        </a>
+                      ))}
                     </div>
                   </div>
                 )}

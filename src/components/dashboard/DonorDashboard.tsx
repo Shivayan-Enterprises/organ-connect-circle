@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Heart, User, Phone, Mail, MapPin, Bell, Users } from "lucide-react";
+import { Search, Heart, User, Phone, Mail, MapPin, Bell, Users, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationBadge from "@/components/NotificationBadge";
 
@@ -93,7 +93,15 @@ const DonorDashboard = ({ profile }: DonorDashboardProps) => {
           <h2 className="text-3xl font-bold">Welcome, {profile.full_name}</h2>
           <p className="text-muted-foreground">Donor Dashboard</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => navigate("/profile")} variant="outline">
+            <User className="mr-2 h-4 w-4" />
+            Profile
+          </Button>
+          <Button onClick={() => navigate("/messages")} variant="outline">
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Messages
+          </Button>
           <Button onClick={() => navigate("/notifications")} variant="outline">
             <Bell className="mr-2 h-4 w-4" />
             Notifications
@@ -101,7 +109,7 @@ const DonorDashboard = ({ profile }: DonorDashboardProps) => {
           </Button>
           <Button onClick={() => navigate("/conference-calls")} variant="outline">
             <Users className="mr-2 h-4 w-4" />
-            Conference Calls
+            Calls
           </Button>
         </div>
       </div>
