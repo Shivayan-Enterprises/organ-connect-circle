@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Video, Users, Clock, CheckCircle, XCircle, Plus } from "lucide-react";
+import { ArrowLeft, Video, Users, Clock, CheckCircle, XCircle } from "lucide-react";
 import VideoCall from "@/components/video/VideoCall";
 import ConferenceCallDialog from "@/components/video/ConferenceCallDialog";
 
@@ -60,7 +60,8 @@ export default function ConferenceCalls() {
   useEffect(() => {
     if (currentUser) {
       fetchCalls();
-      subscribeToChanges();
+      const cleanup = subscribeToChanges();
+      return cleanup;
     }
   }, [currentUser]);
 
@@ -78,6 +79,8 @@ export default function ConferenceCalls() {
   };
 
   const fetchCalls = async () => {
+    if (!currentUser) return;
+    
     try {
       // Fetch calls I created
       const { data: createdCalls, error: createdError } = await supabase
@@ -332,16 +335,20 @@ export default function ConferenceCalls() {
             {myInvitations.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No invitations</p>
             ) : (
-              myInvitations.map((invitation) => (
+              myInvitations.map((invitation) => {
+                const callRequest = invitation.call_request;
+                if (!callRequest) return null;
+                
+                return (
                 <Card key={invitation.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="text-lg">
-                          {invitation.call_request.title}
+                          {callRequest.title}
                         </CardTitle>
                         <CardDescription>
-                          Invited by {invitation.call_request.initiator.full_name}
+                          Invited by {callRequest.initiator?.full_name || 'Unknown'}
                         </CardDescription>
                       </div>
                       {getStatusBadge(invitation.status)}
@@ -368,12 +375,12 @@ export default function ConferenceCalls() {
                           </Button>
                         </>
                       )}
-                      {invitation.status === "accepted" && invitation.call_request.status === "pending" && (
+                      {invitation.status === "accepted" && callRequest.status === "pending" && (
                         <Button
                           onClick={() => joinCall(
-                            invitation.call_request.id,
-                            invitation.call_request.room_name,
-                            invitation.call_request.title,
+                            callRequest.id,
+                            callRequest.room_name,
+                            callRequest.title,
                             invitation.id
                           )}
                           className="w-full"
@@ -382,11 +389,11 @@ export default function ConferenceCalls() {
                           Join Call
                         </Button>
                       )}
-                      {invitation.call_request.status === "active" && (
+                      {callRequest.status === "active" && (
                         <Button
                           onClick={() => setActiveCall({
-                            roomName: invitation.call_request.room_name,
-                            title: invitation.call_request.title
+                            roomName: callRequest.room_name,
+                            title: callRequest.title
                           })}
                           className="w-full"
                         >
@@ -397,7 +404,8 @@ export default function ConferenceCalls() {
                     </div>
                   </CardContent>
                 </Card>
-              ))
+              );
+              })
             )}
           </TabsContent>
 
@@ -405,19 +413,21 @@ export default function ConferenceCalls() {
             {myCreatedCalls.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No calls created yet</p>
             ) : (
-              myCreatedCalls.map((call) => (
+              myCreatedCalls.map((call) => {
+                const participants = call.participants || [];
+                return (
                 <Card key={call.id}>
                   <CardHeader>
                     <CardTitle className="text-lg">{call.title}</CardTitle>
                     <CardDescription>
-                      {call.participants.length} participant{call.participants.length !== 1 ? 's' : ''}
+                      {participants.length} participant{participants.length !== 1 ? 's' : ''}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-2">
-                      {call.participants.map((participant) => (
+                      {participants.map((participant) => (
                         <div key={participant.id} className="flex justify-between items-center text-sm">
-                          <span>{participant.user.full_name}</span>
+                          <span>{participant.user?.full_name || 'Unknown'}</span>
                           {getStatusBadge(participant.status)}
                         </div>
                       ))}
@@ -442,7 +452,8 @@ export default function ConferenceCalls() {
                     )}
                   </CardContent>
                 </Card>
-              ))
+              );
+              })
             )}
           </TabsContent>
         </Tabs>
