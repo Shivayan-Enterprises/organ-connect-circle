@@ -60,22 +60,19 @@ export default function DonorView() {
   );
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <Button variant="ghost" onClick={() => navigate(-1)}>
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6">
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-3xl font-bold">All Donors</h1>
-          <div className="w-20" />
-        </div>
-
-        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-4">Donors</h1>
+          
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or location..."
+              placeholder="Search donors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -84,46 +81,40 @@ export default function DonorView() {
         </div>
 
         {loading ? (
-          <p className="text-center text-muted-foreground">Loading donors...</p>
+          <p className="text-muted-foreground">Loading...</p>
         ) : filteredDonors.length === 0 ? (
-          <p className="text-center text-muted-foreground">No donors found</p>
+          <p className="text-muted-foreground">No donors found</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-3">
             {filteredDonors.map((donor) => (
               <Card
                 key={donor.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover:bg-accent/50"
                 onClick={() => navigate(`/donor/${donor.id}`)}
               >
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>{donor.full_name}</CardTitle>
-                      <CardDescription>{donor.email}</CardDescription>
+                      <CardTitle className="text-lg">{donor.full_name}</CardTitle>
+                      <CardDescription className="text-sm">{donor.email}</CardDescription>
                     </div>
                     {currentUserRole === "doctor" && (
-                      <Badge variant={donor.approved_by_doctor ? "default" : "secondary"}>
+                      <Badge variant={donor.approved_by_doctor ? "default" : "secondary"} className="text-xs">
                         {donor.approved_by_doctor ? "Approved" : "Pending"}
                       </Badge>
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
+                <CardContent className="pt-0">
+                  <div className="flex flex-wrap gap-4 text-sm">
                     {donor.blood_type && (
-                      <p>
-                        <span className="font-semibold">Blood Type:</span> {donor.blood_type}
-                      </p>
+                      <span>Blood: {donor.blood_type}</span>
                     )}
                     {donor.age && (
-                      <p>
-                        <span className="font-semibold">Age:</span> {donor.age}
-                      </p>
+                      <span>Age: {donor.age}</span>
                     )}
                     {donor.location && (
-                      <p>
-                        <span className="font-semibold">Location:</span> {donor.location}
-                      </p>
+                      <span>Location: {donor.location}</span>
                     )}
                   </div>
                 </CardContent>
